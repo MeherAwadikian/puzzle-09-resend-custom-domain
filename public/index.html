@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Puzzle 9 — Resend custom domain mailer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    max-width: 480px;
+    margin: 4rem auto;
+    padding: 0 1.25rem;
+    color: #1a1a1a;
+    background: #fafafa;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #eee; background: #15161a; }
+    input, textarea { background: #22232a; color: #eee; border-color: #3a3b44; }
+  }
+  h1 { font-size: 1.3rem; margin-bottom: 0.2rem; }
+  p.sub { color: #777; margin-top: 0; font-size: 0.9rem; }
+  label { display: block; margin-top: 1rem; font-weight: 600; font-size: 0.9rem; }
+  input, textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.6rem 0.7rem;
+    margin-top: 0.3rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+  }
+  button {
+    margin-top: 1.4rem;
+    width: 100%;
+    padding: 0.7rem;
+    border: none;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  #status { margin-top: 1rem; font-size: 0.9rem; white-space: pre-wrap; }
+  .ok { color: #16a34a; }
+  .err { color: #dc2626; }
+  code { background: #eee; padding: 0.1rem 0.3rem; border-radius: 3px; }
+  @media (prefers-color-scheme: dark) { code { background: #2a2b33; } }
+</style>
+</head>
+<body>
+  <h1>Send yourself a test email</h1>
+  <p class="sub">Real send via the Resend API, from a verified custom domain (<code>aiology.live</code>), not Resend's sandbox domain.</p>
+
+  <form id="f">
+    <label for="email">Your email</label>
+    <input id="email" type="email" required placeholder="you@example.com" />
+
+    <label for="message">Message</label>
+    <textarea id="message" rows="4" required placeholder="Say something..."></textarea>
+
+    <button id="btn" type="submit">Send email</button>
+  </form>
+  <div id="status"></div>
+
+<script>
+const f = document.getElementById('f');
+const btn = document.getElementById('btn');
+const status = document.getElementById('status');
+
+f.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  btn.disabled = true;
+  status.textContent = 'Sending...';
+  status.className = '';
+  const email = document.getElementById('email').value;
+  const message = document.getElementById('message').value;
+  try {
+    const res = await fetch('/api/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, message })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      status.textContent = 'Sent. Resend message id: ' + data.id;
+      status.className = 'ok';
+    } else {
+      status.textContent = 'Error: ' + (data.error || 'unknown');
+      status.className = 'err';
+    }
+  } catch (err) {
+    status.textContent = 'Network error: ' + err.message;
+    status.className = 'err';
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
